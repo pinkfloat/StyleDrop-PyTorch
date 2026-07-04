@@ -71,10 +71,16 @@ And the final directory structure is as follows:
 ```
 
 
-## Dependencies
+## Dependencies to work on a v100
 Same as [MUSE-PyTorch](https://github.com/baaivision/MUSE-Pytorch).
 ```
-conda install pytorch torchvision torchaudio cudatoolkit=11.3
+# great torch versions for different older gpu's
+pip install torch==2.2.0 torchvision==0.17.0 torchaudio==2.2.0 --index-url https://download.pytorch.org/whl/cu118
+
+# compatible with torch versions above and actually needed by this project
+pip install numpy==1.26.4 scipy xformers==0.0.24 omegaconf
+
+# listed by original project
 pip install accelerate==0.12.0 absl-py ml_collections einops wandb ftfy==6.1.1 transformers==4.23.1 loguru webdataset==0.2.5 gradio
 ```
 
