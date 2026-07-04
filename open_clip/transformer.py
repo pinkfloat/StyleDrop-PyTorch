@@ -10,12 +10,6 @@ from torch.nn import functional as F
 from torch.utils.checkpoint import checkpoint
 
 from .utils import to_2tuple
-try:
-    import xformers.ops as xops
-except ImportError:
-    xops = None
-    print("Please 'pip install xformers'")
-
 
 
 class LayerNormFp32(nn.LayerNorm):
@@ -144,13 +138,7 @@ class Attention(nn.Module):
             v = v.contiguous().view(L, N, self.num_heads, -1).transpose(0, 1)
 
             # logger.debug(f'using memory efficient attention')
-            x = xops.memory_efficient_attention(
-                q, k, v,
-                p=self.xattn_drop,
-                scale=self.scale if self.logit_scale is None else None,
-                attn_bias=xops.LowerTriangularMask() if attn_mask is not None else None,
-                # op=xops.MemoryEfficientAttentionFlashAttentionOp
-                )
+            x = F.scaled_dot_product_attention(q, k, v)
         else:
             q = q.contiguous().view(L, N * self.num_heads, -1).transpose(0, 1)
             k = k.contiguous().view(L, N * self.num_heads, -1).transpose(0, 1)
@@ -391,7 +379,7 @@ class VisionTransformer(nn.Module):
             ls_init_value=ls_init_value,
             act_layer=act_layer,
             norm_layer=norm_layer,
-            xattn=xops is not None
+            xattn=False
         )
 
         self.global_average_pool = global_average_pool
@@ -553,7 +541,7 @@ class TextTransformer(nn.Module):
         self.token_embedding = nn.Embedding(vocab_size, width)
         self.positional_embedding = nn.Parameter(torch.empty(self.num_pos, width))
 
-        xattn = xops is not None
+        xattn = False
         self.transformer = Transformer(
             width=width,
             layers=layers,
