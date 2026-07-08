@@ -56,7 +56,10 @@ def train(config):
         torch.backends.cudnn.benchmark = True
         torch.backends.cudnn.deterministic = False
 
-    mp.set_start_method('spawn')
+    try:
+        mp.set_start_method("spawn")
+    except RuntimeError:
+        pass
     accelerator = accelerate.Accelerator()
     device = accelerator.device
     accelerate.utils.set_seed(config.seed, device_specific=True)
